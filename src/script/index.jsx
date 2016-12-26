@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Button from './components/button';
+import {FilterableProductTable, PRODUCTS} from './components/thinking-in-react/components';
 
-ReactDOM.render(
-    <Button/>, document.getElementById('content'));
+//ReactDOM.render(<KanbanBoard cards={cardsList}/>, document.getElementById('content'));
+
+ReactDOM.render(<FilterableProductTable products={PRODUCTS}/>,
+    document.getElementById('content')
+);
