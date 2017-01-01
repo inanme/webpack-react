@@ -1,5 +1,30 @@
 import React, {Component} from 'react';
+import {createStore, compose, applyMiddleware} from 'redux';
+import {connect} from 'react-redux';
+import logger from 'redux-logger';
 import _ from 'lodash';
+import PRODUCTS from './products';
+
+const initState = {
+    filters: {
+
+        filterText: 'ball',
+        inStockOnly: true
+    },
+    products: PRODUCTS
+};
+
+const finalCreateStore = compose(applyMiddleware(logger()))(createStore);
+
+const myReducer = (state = initState, action) => {
+    switch (action.type) {
+        case 'CHANGE':
+            return Object.assign({}, state, {filters: action.filters});
+    }
+    return state;
+};
+
+export const appStore = finalCreateStore(myReducer);
 
 class ProductCategoryRow extends Component {
     render() {
@@ -32,7 +57,7 @@ class ProductTable extends Component {
         const rows = _.flatMap(cats, (prds, cat) =>
             [<ProductCategoryRow category={cat} key={cat}/>,
                 ...prds.filter(product => inStockOnly ? product.stocked : true)
-                    .filter(product => product.name.indexOf(filterText)> -1)
+                    .filter(product => product.name.indexOf(filterText) > -1)
                     .map(product => <ProductRow product={product} key={product.name}/>)]
         );
         return (
@@ -56,9 +81,13 @@ class SearchBar extends Component {
     }
 
     handleChange() {
-        this.props.onUserInput(
-            this.filterTextInput.value,
-            this.inStockOnlyInput.checked
+        this.props.dispatch({
+                type: "CHANGE",
+                filters: {
+                    filterText: this.filterTextInput.value,
+                    inStockOnly: this.inStockOnlyInput.checked
+                }
+            }
         );
     }
 
@@ -85,30 +114,25 @@ class SearchBar extends Component {
     }
 }
 
-export class FilterableProductTable extends Component {
+class FilterableProductTable extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            filterText: 'ball',
-            inStockOnly: true
-        };
-
-        this.handleUserInput = this.handleUserInput.bind(this);
-    }
-
-    handleUserInput(filterText, inStockOnly) {
-        this.setState({filterText, inStockOnly});
     }
 
     render() {
         return (
             <div>
-                <SearchBar onUserInput={this.handleUserInput}
-                           filters={this.state}/>
+                <SearchBar dispatch={this.props.dispatch}
+                           filters={this.props.filters}/>
                 <ProductTable products={this.props.products}
-                              filters={this.state}
+                              filters={this.props.filters}
                 />
             </div>
         );
     }
 }
+function msp(state) {
+    return state;
+}
+
+export const FilterableProductTableWithStore = connect(msp)(FilterableProductTable);
